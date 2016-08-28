@@ -2,10 +2,10 @@
 # Instance
 #--------------------------------------------------------------
 resource "aws_instance" "main" {
-    instance_type = "t2.micro"
+    instance_type = "${var.aws_instance_type}"
 
-    # Trusty 14.04
-    ami = "ami-2a734c42"
+    # AMI ID
+    ami = "${var.aws_ami_id}"
 
     # This will create 1 instances
     count = 1
@@ -17,16 +17,16 @@ resource "aws_instance" "main" {
 #--------------------------------------------------------------
 # Security Group
 #--------------------------------------------------------------
-resource "aws_security_group" "allow_all" {
-  name = "allow_all"
+resource "aws_security_group" "inst_allow_http" {
+  name = "inst_allow_http"
   description = "Allow all inbound traffic"
   vpc_id = "${aws_vpc.main.id}"
 
   ingress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
+      from_port = 80
+      to_port = 80
+      protocol = "tcp"
+      cidr_blocks = ["${var.public_cidr_block_1}","${var.public_cidr_block_2}"]
   }
 }
 
@@ -34,14 +34,32 @@ resource "aws_security_group" "allow_all" {
 # VPC
 #--------------------------------------------------------------
 resource "aws_vpc" "main" {
-    cidr_block = "172.31.0.0/16"
+    cidr_block = "${var.vpc_cidr_block}"
     enable_dns_hostnames = true
 }
 
-resource "aws_subnet" "main" {
+resource "aws_subnet" "public_subnet_1" {
     vpc_id = "${aws_vpc.main.id}"
-    cidr_block = "172.31.0.0/20"
-    map_public_ip_on_launch = true
+    cidr_block = "${var.public_cidr_block_1}"
+    map_public_ip_on_launch = false
+}
+
+resource "aws_subnet" "public_subnet_2" {
+    vpc_id = "${aws_vpc.main.id}"
+    cidr_block = "${var.public_cidr_block_2}"
+    map_public_ip_on_launch = false
+}
+
+resource "aws_subnet" "private_subnet_1" {
+    vpc_id = "${aws_vpc.main.id}"
+    cidr_block = "${var.private_cidr_block_1}"
+    map_public_ip_on_launch = false
+}
+
+resource "aws_subnet" "private_subnet_2" {
+    vpc_id = "${aws_vpc.main.id}"
+    cidr_block = "${var.private_cidr_block_2}"
+    map_public_ip_on_launch = false
 }
 
 resource "aws_internet_gateway" "gw" {
